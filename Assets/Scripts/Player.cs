@@ -30,7 +30,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        //fall();
+        fall();
     }
 
     // Update is called once per frame
