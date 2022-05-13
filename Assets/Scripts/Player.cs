@@ -30,7 +30,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        fall();
+        //fall();
     }
 
     // Update is called once per frame
@@ -67,11 +67,11 @@ public class Player : MonoBehaviour
 
         if(playerState == PlayerState.jumping)
         {
-            position.y = velocity.y * Time.deltaTime;
+            position.y += velocity.y * Time.deltaTime;
             velocity.y -= gravity * Time.deltaTime;
         }
 
-        if(velocity.y==0)
+        if(velocity.y<=0)
         {
             position = CheckFloorRays(position);
         }
@@ -122,27 +122,33 @@ public class Player : MonoBehaviour
 
         if (floorLeft.collider != null || floorMid.collider != null || floorRight.collider != null)
         {
-            RaycastHit2D hitRay=floorLeft;
-            
-            if(floorLeft)
+            RaycastHit2D hitRay = floorLeft;
+
+            if (floorLeft)
                 hitRay = floorLeft;
             if (floorMid)
                 hitRay = floorMid;
             if (floorRight)
                 hitRay = floorRight;
-            
+
             playerState = PlayerState.idle;
 
             ground = true;
-            
-            velocity.y=0;
 
-            position.y=hitRay.collider.bounds.center.y + (hitRay.collider.bounds.size.y/2)+1;
-            
-            
-            
+            velocity.y = 0;
+
+            position.y = hitRay.collider.bounds.center.y + (hitRay.collider.bounds.size.y / 2) + 1;
+
+
+
         }
-
+        else
+        {
+            if(playerState != PlayerState.jumping)
+            {
+                fall();
+            }
+        }
         return position;
     }
 
