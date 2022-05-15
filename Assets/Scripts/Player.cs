@@ -103,7 +103,7 @@ public class Player : MonoBehaviour
 
     void UpdateAnimationStates()
     {
-        if(ground && !walk)
+        if(ground && !walk && !bounce)
         {
             GetComponent<Animator>().SetBool("isJumping",false);
             GetComponent<Animator>().SetBool("isRunning",false);
@@ -219,7 +219,10 @@ public class Player : MonoBehaviour
                 hitRay = ceilingMid;
             if(ceilingRight)
                 hitRay = ceilingRight;
-
+            if(hitRay.collider.tag == "QuestionBlock")
+            {
+                hitRay.collider.GetComponent<QBlocks>().QuestionBlockBounce();
+            }
             position.y = hitRay.collider.bounds.center.y - hitRay.collider.bounds.size.y / 2 - 1;
             fall();
         }
