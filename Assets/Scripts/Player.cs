@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
 
     public Vector2 velocity;
+    public float bounceVelocity;
 
     public LayerMask wallMask;
 
@@ -21,12 +22,14 @@ public class Player : MonoBehaviour
     {
         jumping,
         idle,
-        walking
+        walking,
+        bouncing
     }
 
     private PlayerState playerState = PlayerState.idle;
 
     private bool ground = false;
+    private bool bounce = false;
 
     void Start()
     {
@@ -38,6 +41,7 @@ public class Player : MonoBehaviour
     {
         CheckPlayerInput();
         UpdatePlayerPosition();
+        UpdateAnimationStates();
     }
 
     void UpdatePlayerPosition()
@@ -71,15 +75,53 @@ public class Player : MonoBehaviour
             velocity.y -= gravity * Time.deltaTime;
         }
 
+        if(bounce && playerState != PlayerState.bouncing)
+        {
+            playerState = PlayerState.bouncing;
+
+            velocity = new Vector2(velocity.x, bounceVelocity);
+        }
+
+        if(playerState == PlayerState.bouncing)
+        {
+            position.y += velocity.y * Time.deltaTime;
+            velocity.y -= gravity * Time.deltaTime;
+        }
+
         if(velocity.y<=0)
         {
             position = CheckFloorRays(position);
         }
-
+        if(velocity.y>=0)
+        {
+            position = CheckCeilingRays(position);
+        }
         transform.localPosition = position;
         transform.localScale = scale;
     }
 
+
+    void UpdateAnimationStates()
+    {
+        if(ground && !walk)
+        {
+            GetComponent<Animator>().SetBool("isJumping",false);
+            GetComponent<Animator>().SetBool("isRunning",false);
+
+        }
+
+        if(ground && walk)
+        {
+            GetComponent<Animator>().SetBool("isJumping",false);
+            GetComponent<Animator>().SetBool("isRunning",true);
+        }
+
+        if(playerState == PlayerState.jumping)
+        {
+            GetComponent<Animator>().SetBool("isJumping",true);
+            GetComponent<Animator>().SetBool("isRunning",false);
+        }
+    }
     void CheckPlayerInput()
     {
         bool input_left = Input.GetKey(KeyCode.LeftArrow);
@@ -131,6 +173,12 @@ public class Player : MonoBehaviour
             if (floorRight)
                 hitRay = floorRight;
 
+            if(hitRay.collider.tag == "Enemy")
+            {
+                hitRay.collider.GetComponent<EnemyAI>().Crush();
+                bounce = true;
+            }
+
             playerState = PlayerState.idle;
 
             ground = true;
@@ -152,10 +200,38 @@ public class Player : MonoBehaviour
         return position;
     }
 
+    Vector3 CheckCeilingRays(Vector3 position)
+    {
+        Vector2 originLeft = new Vector2 (position.x - 0.5f + 0.2f, position.y + 1f);
+        Vector2 originMid = new Vector2 (position.x, position.y + 1f);
+        Vector2 originRight = new Vector2 (position.x + 0.5f-0.2f, position.y + 1f);
+
+        RaycastHit2D ceilingLeft = Physics2D.Raycast(originLeft, Vector2.up, velocity.y * Time.deltaTime, floorMask);
+        RaycastHit2D ceilingMid = Physics2D.Raycast(originMid, Vector2.up, velocity.y * Time.deltaTime, floorMask);
+        RaycastHit2D ceilingRight = Physics2D.Raycast(originRight, Vector2.up, velocity.y * Time.deltaTime, floorMask);
+
+        if(ceilingLeft.collider != null || ceilingMid.collider != null || ceilingRight.collider !=null)
+        {
+            RaycastHit2D hitRay = ceilingLeft;
+            if(ceilingLeft)
+                hitRay = ceilingLeft;
+            if(ceilingMid)
+                hitRay = ceilingMid;
+            if(ceilingRight)
+                hitRay = ceilingRight;
+
+            position.y = hitRay.collider.bounds.center.y - hitRay.collider.bounds.size.y / 2 - 1;
+            fall();
+        }
+
+        return position;
+    }
+
     void fall()
     {
         velocity.y=0;
         playerState = PlayerState.jumping;
-        ground=false;
+        bounce = false;
+        ground = false;
     }
 }
