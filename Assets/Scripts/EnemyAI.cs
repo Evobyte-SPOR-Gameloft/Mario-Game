@@ -172,7 +172,10 @@ public class EnemyAI : MonoBehaviour
                 hitRay = wallMid;
             if(wallBottom)
                 hitRay = wallBottom;
-
+            if(hitRay.collider.tag=="Player")//THIS WAS THE BUG
+            {
+                SceneManager.LoadScene("GameOver");
+            }
             isWalkingLeft = !isWalkingLeft;
         }
     }
