@@ -9,6 +9,11 @@ public class QBlocks : MonoBehaviour
     public float bounceHeight = 0.5f;
     public float bounceSpeed = 4f;
 
+    public float coinMoveSpeed = 8f;
+    public float coinMoveHeight = 3f;
+    public float coinFallDistance = 2f;
+    public Sprite emptyBlock;
+
     private bool canBounce = true;
 
     private Vector2 originalPosition;
@@ -32,8 +37,25 @@ public class QBlocks : MonoBehaviour
         
     }
 
+    void ChangeSprite()
+    {
+        GetComponent<Animator>().enabled=false;
+        GetComponent<SpriteRenderer>().sprite = emptyBlock;     
+    }
+
+
+    void PresentCoin()
+    {
+        GameObject spinningCoin = (GameObject)Instantiate (Resources.Load("Prefabs/Spinning_Coin",typeof(GameObject)));
+        spinningCoin.transform.SetParent(this.transform.parent);
+        spinningCoin.transform.localPosition = new Vector2(originalPosition.x, originalPosition.y+1);
+
+        StartCoroutine(MoveCoin(spinningCoin));
+    }
     IEnumerator Bounce()
     {
+        ChangeSprite();
+        PresentCoin();
         while(true)
         {
             transform.localPosition = new Vector2(transform.localPosition.x, transform.localPosition.y + bounceSpeed * Time.deltaTime);
@@ -49,6 +71,29 @@ public class QBlocks : MonoBehaviour
                     transform.localPosition = originalPosition;
                     break;
                 }
+            yield return null;
+        }
+    }
+
+    IEnumerator MoveCoin (GameObject coin)
+    {
+        while(true)
+        {
+            coin.transform.localPosition = new Vector2(coin.transform.localPosition.x, coin.transform.localPosition.y + coinMoveSpeed * Time.deltaTime);
+            if(coin.transform.localPosition.y >= originalPosition.y + coinMoveHeight + 1)
+            {
+                break;
+            }
+            yield return null;
+        }
+        while(true)
+        {
+            coin.transform.localPosition = new Vector2(coin.transform.localPosition.x, coin.transform.localPosition.y - coinMoveSpeed * Time.deltaTime);
+            if(coin.transform.localPosition.y <= originalPosition.y + coinFallDistance + 1)
+            {
+                Destroy(coin);
+                break;
+            }
             yield return null;
         }
     }
